@@ -7,7 +7,7 @@ from mpu9250_i2c import *
 from time import time, sleep
 import csv
 import serial
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 
 TIMEOUT = 99999
 start_time = int(time())
@@ -45,6 +45,9 @@ apogee_fired = False
 main_deploy_altitude = 450.0
 main_fired = False
 
+apogee_pin = 17
+main_pin = 27
+
 
 def record():
     camera = picamera.PiCamera(framerate=60)
@@ -55,9 +58,11 @@ def record():
 
 if __name__ == '__main__':
 
-    # GPIO.setwarnings(False)
-    # GPIO.setmode(GPIO.BCM)
-    # GPIO.setup(17, GPIO.OUT)
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(apogee_pin, GPIO.OUT)
+    GPIO.setup(main_pin, GPIO.OUT)
+    GPIO.output(apogee_pin, True)
+    GPIO.output(main_pin, True)
 
     bmp = BMP085.BMP085()
 
@@ -123,18 +128,18 @@ if __name__ == '__main__':
 
 
                         if is_valid:
-                            # write digital pin high
+                            GPIO.output(apogee_pin, False)
                             sleep(2)
                             apogee_fired = True
-                            # write digital pin low
+                            GPIO.output(apogee_pin, True)
 
                         apogee_altitude = current_altitude
 
                 if apogee_fired and not main_fired and current_altitude <= main_deploy_altitude:
-                    # write digital pin high
+                    GPIO.output(main_pin, False)
                     sleep(2)
                     main_fired = True
-                    # write digital pin low
+                    GPIO.output(main_pin, True)
 
                 last_altitude = current_altitude
 
@@ -153,6 +158,7 @@ if __name__ == '__main__':
                 ser.write(ser_data)
                 ser.flush()
             except KeyboardInterrupt:
+                GPIO.cleanup()
                 ser.close()
                 exit()
 
