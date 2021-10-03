@@ -4,7 +4,7 @@ import picamera
 import threading
 import Adafruit_BMP.BMP085 as BMP085
 from mpu9250_i2c import *
-from time import time, sleep
+from time import time, sleep, ctime
 import csv
 import serial
 import RPi.GPIO as GPIO
@@ -132,6 +132,12 @@ if __name__ == '__main__':
                             sleep(2)
                             apogee_fired = True
                             GPIO.output(apogee_pin, True)
+                            try:
+                                row = f'apogee deployed at {ctime()}#\r\n'
+                                writer.writerow(row)
+                                ser.write(row.encode('utf-8'))
+                            except:
+                                sleep(0.1)
 
                         apogee_altitude = current_altitude
 
@@ -140,6 +146,12 @@ if __name__ == '__main__':
                     sleep(2)
                     main_fired = True
                     GPIO.output(main_pin, True)
+                    try:
+                        row = f'main deployed at {ctime()}#\r\n'
+                        writer.writerow(row)
+                        ser.write(row.encode('utf-8'))
+                    except:
+                        sleep(0.1)
 
                 last_altitude = current_altitude
 
