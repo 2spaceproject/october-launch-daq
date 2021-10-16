@@ -13,7 +13,7 @@ TIMEOUT = 99999
 start_time = int(time())
 csv_header = ['temp', 'pres', 'alt', 'ax', 'ay', 'az']
 
-threshold_alt = 30.0
+threshold_alt = 4000.0
 
 def kalman_calc(altitude):
     global kalman_x_last
@@ -45,8 +45,8 @@ apogee_fired = False
 main_deploy_altitude = 450.0
 main_fired = False
 
-apogee_pin = 17
-main_pin = 27
+apogee_pin = 21
+main_pin = 26
 
 
 def record():
@@ -61,8 +61,8 @@ if __name__ == '__main__':
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(apogee_pin, GPIO.OUT)
     GPIO.setup(main_pin, GPIO.OUT)
-    GPIO.output(apogee_pin, True)
-    GPIO.output(main_pin, True)
+    GPIO.output(apogee_pin, False)
+    GPIO.output(main_pin, False)
 
     bmp = BMP085.BMP085()
 
@@ -76,8 +76,8 @@ if __name__ == '__main__':
     if not ser.is_open:
         ser.open()
 
-    t1 = threading.Thread(target=record, daemon=True)
-    t1.start()
+    #t1 = threading.Thread(target=record, daemon=True)
+    #t1.start()
 
     print('Calibrating Kalman filter...')
 
@@ -128,10 +128,10 @@ if __name__ == '__main__':
 
 
                         if is_valid:
-                            GPIO.output(apogee_pin, False)
+                            GPIO.output(apogee_pin, True)
                             sleep(2)
                             apogee_fired = True
-                            GPIO.output(apogee_pin, True)
+                            GPIO.output(apogee_pin, False)
                             try:
                                 row = f'apogee deployed at {ctime()}#\r\n'
                                 writer.writerow(row)
@@ -142,10 +142,10 @@ if __name__ == '__main__':
                         apogee_altitude = current_altitude
 
                 if apogee_fired and not main_fired and current_altitude <= main_deploy_altitude:
-                    GPIO.output(main_pin, False)
+                    GPIO.output(main_pin, True)
                     sleep(2)
                     main_fired = True
-                    GPIO.output(main_pin, True)
+                    GPIO.output(main_pin, False)
                     try:
                         row = f'main deployed at {ctime()}#\r\n'
                         writer.writerow(row)
@@ -175,5 +175,5 @@ if __name__ == '__main__':
                 exit()
 
 
-    t1.join()
+    #t1.join()
     ser.close()
